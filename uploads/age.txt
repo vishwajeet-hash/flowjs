@@ -1,0 +1,44 @@
+IF(ISBLANK(Birthdate),
+    "",
+ 
+    TEXT(
+
+        YEAR(TODAY()) - YEAR(Birthdate) - 
+
+        IF(
+
+            MONTH(Birthdate) > MONTH(TODAY()) ||
+
+                (
+
+                    MONTH(Birthdate) = MONTH(TODAY()) &&
+
+                    DAY(Birthdate) > DAY(TODAY())
+
+                ),
+
+            1, 
+
+            0
+
+        )
+
+    )
+
+    & " YEARS "&
+     TEXT(
+        IF(
+            MONTH(Birthdate) > MONTH(TODAY()) ||
+                (
+                    MONTH(Birthdate) = MONTH(TODAY()) &&
+                    DAY(Birthdate) > DAY(TODAY())
+                ),
+            MONTH(TODAY()) + 12 - MONTH(Birthdate),
+            MONTH(TODAY()) - MONTH(Birthdate)
+        )
+     )
+    
+    & " MONTHS " &
+    TEXT(FlOOR(MOD(MOD((TODAY()-Birthdate),365.2422),30.4375)))&"Days"
+   
+)

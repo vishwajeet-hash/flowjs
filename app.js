@@ -4,28 +4,44 @@ const fs = require("fs");
 const path = require("path");
 const cors = require("cors");
 
+const PORT = 5000;
+
 const app = express();
-const upload = multer({ dest: "uploads/" });
 
-app.use(cors()); // Enable CORS
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/')
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+})
 
-// Serve the static files from the React app
-app.use(express.static(path.join(__dirname, "frontend/build")));
+const upload = multer({ storage: storage });
 
-app.post("/upload", upload.single("file"), (req, res) => {
-  const { originalname, filename } = req.file;
-  const dest = path.join(__dirname, "uploads", originalname);
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  fs.renameSync(req.file.path, dest);
+app.post("/upload", (req, res) => {
+  upload.single('file')(req, res, function (err) {
+    if (err instanceof multer.MulterError) {
+      console.error("Multer error:", err);
+      return res.status(500).send("Upload error: " + err.message);
+    } else if (err) {
+      console.error("Unknown error:", err);
+      return res.status(500).send("Unknown error occurred");
+    }
 
-  res.status(200).send("File uploaded successfully");
+    console.log("File received:", req.file);
+    if (!req.file) {
+      return res.status(400).send("No file uploaded.");
+    }
+
+    res.status(200).send("File uploaded successfully");
+  });
 });
 
-// Handles any requests that don't match the ones above
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/build", "index.html"));
-});
-
-app.listen(5000, () => {
-  console.log("Server listening on port 5000");
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
 });
